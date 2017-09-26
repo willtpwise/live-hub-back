@@ -7,10 +7,7 @@ use Zend\Config\Factory;
 use Zend\Http\PhpEnvironment\Request;
 use Firebase\JWT\JWT;
 
-require_once (__DIR__ . '/../../database/connect.php');
-require_once (__DIR__ . '/../../auth/token.php');
-
-class CreateUser {
+class CreateUser extends APIComponent {
   public $fields;
   public $required;
   public $payload;
@@ -42,9 +39,11 @@ class CreateUser {
     );
 
     if ($this->validate()) {
-      $this->query();
+      $this->response = $this->query();
     } else {
-      header('HTTP/1.0 400 Bad Request');
+      $this->response = new Response(array(
+        'header' => 400
+      ));
     }
   }
 
@@ -56,9 +55,14 @@ class CreateUser {
     $result = $conn->query($sql);
 
     if ($result) {
-      echo token($conn->insert_id, $this->payload['password']);
+      return new Response(array(
+        'body' => $conn->insert_id,
+        'token' => token($conn->insert_id, $this->payload['username'])
+      ));
     } else {
-      header('HTTP/1.0 500 Internal Server Error');
+      return new Response(array(
+        'header' => 500
+      ));
     }
   }
 
@@ -72,18 +76,15 @@ class CreateUser {
     }
 
     // Sanitize and store the payload
+    $payload = array();
     foreach ($this->fields as $field) {
-      $this->payload[$field] = filter_input(INPUT_POST, $field, FILTER_SANITIZE_STRING);
+      $payload[$field] = filter_input(INPUT_POST, $field, FILTER_SANITIZE_STRING);
     }
+    $this->payload = $payload;
 
     // Hash the password
     $this->payload['password'] = password_hash($this->payload['password'], PASSWORD_DEFAULT);
 
     return true;
   }
-}
-
-$request = new Request();
-if ($request->isPost()) {
-  $CreateUser = new CreateUser($_POST);
 }

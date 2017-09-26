@@ -9,25 +9,26 @@ use Zend\Config\Factory;
 use Zend\Http\PhpEnvironment\Request;
 use Firebase\JWT\JWT;
 
-require_once (__DIR__ . '/../../database/connect.php');
-require_once (__DIR__ . '/../../auth/verify.php');
-
-if (isset($_GET['id']) && verify_token()) {
-
-  $user_id = $_GET['id'];
-
-  $conn = connect();
-  $sql = "DELETE FROM users WHERE id = $user_id";
-  $result = $conn->query($sql);
-
-  if ($result) {
-    echo "success";
-  } else {
-    header('HTTP/1.0 500 Internal Server Error');
+class DeleteUser {
+  public $user_id;
+  function __construct ($user_id) {
+    $this->user_id = $user_id;
   }
 
-} else {
+  private function query () {
+    $conn = connect();
+    $user_id = $this->user_id;
+    $sql = "DELETE FROM users WHERE id = $user_id";
+    $result = $conn->query($sql);
 
-  header('HTTP/1.0 400 Bad Request');
-
+    if ($result) {
+      return new Response(array(
+        'body' => 'success'
+      ));
+    } else {
+      return new Response(array(
+        'header' => '500'
+      ));
+    }
+  }
 }

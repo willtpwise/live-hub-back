@@ -5,48 +5,96 @@
  * The user must be signed in or an admin
  */
 
-// header('Access-Control-Allow-Headers: Authorization');
-
 use Zend\Config\Factory;
 use Zend\Http\PhpEnvironment\Request;
 use Firebase\JWT\JWT;
 
-require_once (__DIR__ . '/validate.php');
-require_once (__DIR__ . '/../../database/connect.php');
-require_once (__DIR__ . '/../../auth/token.php');
+class UpdateUser extends APIComponent {
+  public $fields;
+  public $required;
+  public $payload;
 
-$fields = array(
- 'id',
- 'username',
- 'first_name',
- 'password'
-);
+  function __construct ($payload) {
+    $this->payload = $payload;
 
-$payload = validate($fields);
+    $this->fields = array(
+     'password',
+     'first_name',
+     'last_name',
+     'nickname',
+     'email',
+     'lat',
+     'lng',
+     'street_number',
+     'route',
+     'locality',
+     'administrative_area_level_1',
+     'country',
+     'postal_code'
+    );
 
-if ($payload) {
+    $this->required = array(
+     'first_name',
+     'last_name',
+     'email'
+    );
 
-  $values = array();
-  foreach (array_keys($payload) as $field) {
-    $values[] = $field . "='" . $payload[$field] . "'";
+    if ($this->validate()) {
+      $this->response = $this->query();
+    } else {
+      $this->response = new Response(array(
+        'header' => 400
+      ));
+    }
   }
-  $values = implode(', ', $values);
 
-  $user_id = $payload['id'];
-  $user_name = $payload['username'];
+  private function query () {
+    $values = array();
+    foreach (array_keys($this->payload) as $field) {
+      $values[] = $field . "='" . $this->payload[$field] . "'";
+    }
+    $values = implode(', ', $values);
 
-  $conn = connect();
-  $sql = "UPDATE users SET $values WHERE id = $user_id";
-  $result = $conn->query($sql);
+    $user_id = $this->payload['id'];
+    $user_name = $this->payload['username'];
 
-  if ($result) {
-    echo token($user_id, $user_name);
-  } else {
-    header('HTTP/1.0 500 Internal Server Error');
+    $conn = connect();
+    $sql = "UPDATE users SET $values WHERE id = $user_id";
+    $result = $conn->query($sql);
+
+    if ($result) {
+      return new Response(array(
+        'token' => token($conn->insert_id, $this->payload['password'])
+      ));
+    } else {
+      return new Response(array(
+        'header' => 500
+      ));
+    }
   }
 
-} else {
+  private function validate () {
+    // Check that all required fields exist
+    foreach ($this->required as $field) {
+      if (empty($_POST[$field])) {
+        return false;
+      }
+    }
 
-  header('HTTP/1.0 400 Bad Request');
+    // Sanitize and store the payload
+    foreach ($this->fields as $field) {
+      $this->payload[$field] = filter_input(INPUT_POST, $field, FILTER_SANITIZE_STRING);
+    }
 
+    // Hash the password
+    if (isset($this->payload['password'])) {
+      if (empty($this->payload['password'])) {
+        unset($this->payload['password']);
+      } else {
+        $this->payload['password'] = password_hash($this->payload['password'], PASSWORD_DEFAULT);
+      }
+    }
+
+    return true;
+  }
 }
