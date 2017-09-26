@@ -8,15 +8,21 @@ require_once (__DIR__ . '/auth/token.php');
 require_once (__DIR__ . '/auth/verify.php');
 require_once (__DIR__ . '/utilities/response.php');
 require_once (__DIR__ . '/utilities/connect.php');
-
 require_once (__DIR__ . '/api/api-component.php');
 
+// User API
 require_once (__DIR__ . '/api/user/create/index.php');
 require_once (__DIR__ . '/api/user/index.php');
 
+// File API
+require_once (__DIR__ . '/api/file/create/index.php');
+require_once (__DIR__ . '/api/file/delete/index.php');
+
 $routes = array(
   '/user/' => 'GetUser',
-  '/user/create/' => 'CreateUser'
+  '/user/create/' => 'CreateUser',
+  '/file/create/' => 'CreateFile',
+  '/file/delete/' => 'DeleteFile'
 );
 
 define('REQUEST_URI', str_replace('?' . $_SERVER['QUERY_STRING'], '', $_SERVER['REQUEST_URI']));
