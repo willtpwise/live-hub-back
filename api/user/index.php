@@ -12,28 +12,58 @@ class GetUser extends APIComponent {
 
   function __construct ($query) {
     $this->query = $query;
-    $this->lookup();
-  }
 
-  private function lookup () {
-    if (empty($this->query['id']) && empty($this->query['username'])) {
-      $this->response = new Response(array(
-        'header' => 400
-      ));
-      return;
+    if (!isset($this->query['id'])) {
+      // This requests appears to be for the logged in user
+      // Validate and decode their token to attain a user id
+      $token = get_token();
+      $token = decode_token($token);
+      if ($token) {
+        $this->query['id'] = $token->data->userId;
+      }
     }
 
-    $query_term = empty($this->query['id']) ? 'username' : 'id';
-    $query_val = $this->query[$query_term];
-    
+    $this->lookup($this->query['id']);
+  }
+
+  private function lookup ($user_id) {
     $conn = connect();
-    $sql = "SELECT * FROM users WHERE $query_term = '$query_val'";
-    $sql = $conn->query($sql);
 
-    if ($sql) {
+    // Profile info
+    $profile = "SELECT * FROM users WHERE id = '$user_id'";
+    $profile = $conn->query($profile);
 
-      $user = $sql->fetch_assoc();
-      unset($user['password']);
+    // Meta info
+    $meta = "SELECT * FROM meta WHERE user_id = '$user_id'";
+    $meta = $conn->query($meta);
+
+    if ($profile && $meta) {
+
+      $profile = $profile->fetch_assoc();
+      $meta = $meta->fetch_assoc();
+
+      // Pre-format the returned result
+      $user = array(
+        'instruments' => array(),
+        'contact' => array(),
+        'social' => array()
+      );
+
+      // Format the profile data
+      if ($profile) {
+        $user = array_merge($user, $profile);
+        unset($user['password']);
+      }
+
+      // Format the meta data
+      if ($meta) {
+        foreach ($meta as $item) {
+          $user[$item['category']] = array(
+            'type' => $item['type'],
+            'val' => $item['val']
+          );
+        }
+      }
 
       $this->response = new Response(array(
         'body' => $user

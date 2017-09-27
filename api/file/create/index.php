@@ -9,7 +9,7 @@ use Firebase\JWT\JWT;
 
 class CreateFile extends APIComponent {
   public $payload;
-
+  private $user;
   function __construct ($payload) {
     $this->payload = @$_FILES['upload'];
 
@@ -23,15 +23,18 @@ class CreateFile extends APIComponent {
   }
 
   private function save () {
-    // TO DO: Save the file under the user's ID
-    // Check the the user is logged in and validate the JWT
-    $target_dir = 'uploads/';
-    $target_file = $target_dir . basename($this->payload["name"]);
+    $target_dir = 'uploads/user/' . $this->user->userId . '/';
+    if (!file_exists($target_dir)) {
+      mkdir($target_dir);
+    }
+    $target_name = date('U') . '-' . basename($this->payload["name"]);
+    $target_name = urlencode(strtolower($target_name));
+    $target_file = $target_dir . $target_name;
 
     if (move_uploaded_file($this->payload['tmp_name'], $target_file)) {
       return new Response(array(
-        'body' => $target_file
-        // TO DO: Send JWT token
+        'body' => $target_file,
+        'token' => token($this->user->userId, $this->user->userName)
       ));
     } else {
       return new Response(array(
@@ -41,8 +44,16 @@ class CreateFile extends APIComponent {
   }
 
   private function validate () {
-    if (!$this->payload) {
-      return false;
+    // If this is an HTTP request, verify the user's token
+    $request = new Request();
+    if ($request->isPost()) {
+      $token = get_token();
+      if (verify_token($token)) {
+        $token = decode_token($token);
+        $this->user = $token->data;
+      } else {
+        return false;
+      }
     }
 
     // Check that the file is an image and exists

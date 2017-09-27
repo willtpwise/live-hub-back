@@ -16,22 +16,13 @@ class CreateUser extends APIComponent {
     $this->payload = $payload;
 
     $this->fields = array(
-     'username',
      'password',
      'first_name',
      'last_name',
-     'email',
-     'address_lat',
-     'address_lng',
-     'address_street',
-     'address_state',
-     'address_suburb',
-     'address_country',
-     'address_post_code'
+     'email'
     );
 
     $this->required = array(
-     'username',
      'password',
      'first_name',
      'last_name',
@@ -45,6 +36,10 @@ class CreateUser extends APIComponent {
         'header' => 400
       ));
     }
+  }
+
+  private function generate_username () {
+    return date('U');
   }
 
   private function query () {
@@ -70,7 +65,6 @@ class CreateUser extends APIComponent {
     // Check that all required fields exist
     foreach ($this->required as $field) {
       if (empty($_POST[$field])) {
-        die($field);
         return false;
       }
     }
@@ -84,6 +78,9 @@ class CreateUser extends APIComponent {
 
     // Hash the password
     $this->payload['password'] = password_hash($this->payload['password'], PASSWORD_DEFAULT);
+
+    // Record the creation data
+    $this->payload['created'] = date('U');
 
     return true;
   }

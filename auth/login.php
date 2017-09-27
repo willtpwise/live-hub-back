@@ -12,10 +12,6 @@
  */
 chdir(dirname(__DIR__));
 
-require_once('vendor/autoload.php');
-require_once('auth/token.php');
-require_once('database/connect.php');
-
 use Zend\Config\Factory;
 use Zend\Http\PhpEnvironment\Request;
 use Firebase\JWT\JWT;

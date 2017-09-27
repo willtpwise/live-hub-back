@@ -1,20 +1,69 @@
 <?php
 /**
- * Returns a JWT token
+ * JSON Web Tokens
  *
- * The token has a week-long expiry and it's data claim contains the user's ID and username
- *
- * @param $user_id : int : The user's ID number in the DB
- * @param $user_name : string : The user's username in the DB
- *
- * @return string : A signed JWT
+ * Utilities for creating, using and verifying JWTs
  */
+chdir(dirname(__DIR__));
 
+use Zend\Config\Config;
 use Zend\Config\Factory;
 use Zend\Http\PhpEnvironment\Request;
 use Firebase\JWT\JWT;
 
-function token ($user_id, $user_name) {
+/**
+ * Decodes a JWT into an array
+ *
+ * @param $token: The JWT token
+ *
+ * @return Success: The JWT decoded into an array
+ *
+ * @return Failure: null, if the JWT was empty
+ *
+ * If the JWT is invalid (I.e. it's been tampered with) this function will fail
+ * and cause PHP to die.
+ */
+function decode_token ($token) {
+  if ($token) {
+    $config = Factory::fromFile('config/config.php', true);
+    $secretKey = base64_decode($config->get('jwt')->get('key'));
+    $token = JWT::decode($token, $secretKey, [$config->get('jwt')->get('algorithm')]);
+    return $token;
+  }
+}
+
+/**
+ * Retrieves the current user's JWT from the 'authorization' header
+ *
+ * @return Success: string : The JWT, unmodified
+ *
+ * @return Failure: bool : false (The JWT doesn't exist)
+ */
+function get_token () {
+  $request = new Request();
+  $authHeader = $request->getHeader('authorization');
+  if (!$authHeader) {
+    return false;
+  }
+
+  list($jwt) = sscanf($authHeader->toString(), 'Authorization: Bearer %s');
+  if ($jwt) {
+    return $jwt;
+  } else {
+    return false;
+  }
+}
+
+/**
+ * Creates a JWT token
+ *
+ * The token has a week-long expiry and it's data claim contains the user's ID
+ *
+ * @param $user_id : int : The user's ID number in the database
+ *
+ * @return string : A signed JWT
+ */
+function create_token ($user_id) {
   $config     = Factory::fromFile('config/config.php', true);
   $tokenId    = base64_encode(random_bytes(32));
   $issuedAt   = time();
@@ -32,8 +81,7 @@ function token ($user_id, $user_name) {
       'nbf'  => $notBefore,         // Not before
       'exp'  => $expire,            // Expire
       'data' => [                   // Data related to the signer user
-          'userId'   => $user_id,   // userid from the users table
-          'userName' => $user_name, // User name
+          'userId'  => $user_id     // userid from the users table
       ]
   ];
 
@@ -67,5 +115,5 @@ function token ($user_id, $user_name) {
       $algorithm  // Algorithm used to sign the token, see https://tools.ietf.org/html/draft-ietf-jose-json-web-algorithms-40#section-3
       );
 
-  return json_encode($jwt);
+  return $jwt;
 }

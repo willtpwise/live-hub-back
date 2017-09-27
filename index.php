@@ -3,16 +3,18 @@
  * Load API methods then handles incoming api requests
  */
 header("Access-Control-Allow-Origin: *");
+header('Access-Control-Allow-Headers: Authorization, Content-type');
 
 require_once (__DIR__ . '/auth/token.php');
 require_once (__DIR__ . '/auth/verify.php');
 require_once (__DIR__ . '/utilities/response.php');
 require_once (__DIR__ . '/utilities/connect.php');
 require_once (__DIR__ . '/api/api-component.php');
+require_once (__DIR__ . '/utilities/request-data.php');
 
 // User API
-require_once (__DIR__ . '/api/user/create/index.php');
 require_once (__DIR__ . '/api/user/index.php');
+require_once (__DIR__ . '/api/user/create/index.php');
 
 // File API
 require_once (__DIR__ . '/api/file/create/index.php');
@@ -25,7 +27,6 @@ $routes = array(
   '/file/delete/' => 'DeleteFile'
 );
 
-define('REQUEST_URI', str_replace('?' . $_SERVER['QUERY_STRING'], '', $_SERVER['REQUEST_URI']));
 if (isset($routes[REQUEST_URI])) {
 
   $api = new $routes[REQUEST_URI]($_REQUEST);

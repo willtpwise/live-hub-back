@@ -1,0 +1,10 @@
+{
+  "name": "live-hub-back",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "William Wise",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.16.2"
+  }
+}
