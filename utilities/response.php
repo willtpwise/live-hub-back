@@ -25,11 +25,17 @@ class Response {
       '400' => 'HTTP/1.0 400 Bad Request'
     );
 
-    $header_code = intval($this->args['header']);
+    $header_code = $this->args['header'];
     if (isset($headers[$header_code])) {
       header($headers[$header_code]);
+    }
+    unset($this->args['header']);
+
+    // If this is a signed in user, revalidate their JWT
+    if (REQUEST_USER) {
+      $this->args['token'] = create_token(REQUEST_USER);
     }
 
     echo $this->format($this->args);
   }
-} ?>
+}

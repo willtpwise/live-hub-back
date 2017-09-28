@@ -5,10 +5,17 @@
     <title></title>
   </head>
   <body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script>
       var jwt = localStorage.getItem('LiveHUB')
-      axios.post('/user/', false, {
+      var user = {
+        first_name: 'Will',
+        last_name: 'Wise',
+        password: 'asdad',
+        email: 'asdkbadsq23@askd.com'
+      }
+      axios.post('/users/create/', jQuery.param(user), {
         headers: {
           Authorization: 'Bearer ' + jwt
         }
@@ -16,5 +23,6 @@
         console.log(response.data)
       })
     </script>
+
   </body>
 </html>
