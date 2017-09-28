@@ -3,3 +3,4 @@
 php.ini
 .idea/
 php_errors.log
+node_modules
