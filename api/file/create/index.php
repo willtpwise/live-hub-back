@@ -7,58 +7,55 @@ use Zend\Config\Factory;
 use Zend\Http\PhpEnvironment\Request;
 use Firebase\JWT\JWT;
 
+require_once (__DIR__ . '/make-thumb.php');
+
 class CreateFile extends APIComponent {
   public $payload;
-  private $user;
   function __construct ($payload) {
     $this->payload = @$_FILES['upload'];
 
     if ($this->validate()) {
-      $this->response = $this->save();
+      $thumbnail = new MakeThumb($this->payload['tmp_name'], $this->create_name());
+      $thumbnail = $thumbnail->thumbnail();
+
+      if ($thumbnail) {
+        $this->response = new Response(array(
+          'body' => $thumbnail
+        ));
+      } else {
+        $this->response = new Response(array(
+          'header' => 500
+        ));
+      }
     } else {
       $this->response = new Response(array(
-        'header' => 400
+        'body' => 'Invalid request'
       ));
     }
   }
 
-  private function save () {
-    $target_dir = 'uploads/user/' . $this->user->userId . '/';
+  private function create_name () {
+    // Format: `uploads/user/<user id>/<timestamp>-<filename>`
+    $target_dir = 'uploads/user/' . REQUEST_USER . '/';
     if (!file_exists($target_dir)) {
       mkdir($target_dir);
     }
-    $target_name = date('U') . '-' . basename($this->payload["name"]);
+    $target_name = basename($this->payload["name"]);
+    $target_name = date('U') . '-' . $target_name;
     $target_name = urlencode(strtolower($target_name));
-    $target_file = $target_dir . $target_name;
+    $target_name = $target_dir . $target_name;
 
-    if (move_uploaded_file($this->payload['tmp_name'], $target_file)) {
-      return new Response(array(
-        'body' => $target_file,
-        'token' => token($this->user->userId, $this->user->userName)
-      ));
-    } else {
-      return new Response(array(
-        'header' => 500
-      ));
-    }
+    return $target_name;
   }
 
   private function validate () {
-    // If this is an HTTP request, verify the user's token
-    $request = new Request();
-    if ($request->isPost()) {
-      $token = get_token();
-      if (verify_token($token)) {
-        $token = decode_token($token);
-        $this->user = $token->data;
-      } else {
-        return false;
-      }
+    // Check to see the user is logged in
+    if (!REQUEST_USER) {
+      return false;
     }
 
     // Check that the file is an image and exists
-    $size = getimagesize($this->payload['tmp_name']);
-    if (!$size) {
+    if (!isset($this->payload['tmp_name']) || !getimagesize($this->payload['tmp_name'])) {
       return false;
     }
 

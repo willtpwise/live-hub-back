@@ -48,7 +48,7 @@ class CreateUser extends APIComponent {
       $this->response = $this->store();
     } else {
       $this->response = new Response([
-        'header' => 400
+        'body' => 'Invalid request'
       ]);
     }
   }
@@ -71,13 +71,12 @@ class CreateUser extends APIComponent {
 
     if ($this->conn->query($sql) === true) {
       return new Response([
-        'body' => true,
+        'body' => 'success',
         'token' => create_token($this->conn->insert_id)
       ]);
     } else {
       return new Response([
-        'body' => false,
-        'header' => 500
+        'body' => 'invalid request'
       ]);
     }
   }
@@ -144,12 +143,9 @@ class CreateUser extends APIComponent {
    */
   private function get_location () {
     try {
-      // This creates the Reader object, which should be reused across
-      // lookups.
+      // MaxMind GeoIP lookup
+      // See: http://maxmind.github.io/GeoIP2-php/
       $reader = new Reader('assets/GeoLite2-City.mmdb');
-
-      // Replace "city" with the appropriate method for your database, e.g.,
-      // "country".
       $record = $reader->city($_SERVER['REMOTE_ADDR']);
       return [
         'lat' => $record->location->latitude,

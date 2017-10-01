@@ -17,7 +17,7 @@ class UpdateUser extends APIComponent {
 
     if (!$this->is_permitted()) {
       $this->response = new Response([
-        'header' => 401
+        'body' => 'Invalid request'
       ]);
       return;
     }
@@ -36,7 +36,7 @@ class UpdateUser extends APIComponent {
       $this->store_meta();
 
       $this->response = new Response([
-        'body' => true
+        'body' => 'success'
       ]);
     } else {
       $this->response = new Response([
@@ -51,7 +51,7 @@ class UpdateUser extends APIComponent {
    * @return true / false
    */
   private function is_permitted () {
-    if (REQUEST_USER === intval($this->payload['id'])) {
+    if (isset($this->payload['id']) && REQUEST_USER === intval($this->payload['id'])) {
       return true;
     } else {
       return false;
@@ -79,9 +79,10 @@ class UpdateUser extends APIComponent {
     $payload = $this->payload;
     unset($payload['meta']);
 
-    // Unset the id property
+    // Prevent read-only data being overwritter
     $user_id = $payload['id'];
     unset($payload['id']);
+    unset($payload['created']);
 
     // Prevent passwords being overwritten with empty strings
     if (isset($payload['password']) && empty($payload['password'])) {
@@ -183,8 +184,11 @@ class UpdateUser extends APIComponent {
     // Accepted fields
     $user_fields = [
       'id',
+      'created',
       'first_name',
       'last_name',
+      'display',
+      'status',
       'bio',
       'email',
       'street_number',
@@ -202,7 +206,7 @@ class UpdateUser extends APIComponent {
     // Check that the passed fields are available in the db
     foreach (array_keys($query) as $field) {
       if (!in_array($field, $user_fields)) {
-        return false;
+        unset($query[$field]);
       }
     }
 

@@ -2,6 +2,7 @@
 /**
  * Load API methods then handles incoming api requests
  */
+
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Headers: Authorization, Content-type');
 
@@ -17,6 +18,7 @@ require_once (__DIR__ . '/api/users/index.php');
 require_once (__DIR__ . '/api/users/create/index.php');
 require_once (__DIR__ . '/api/users/update/index.php');
 require_once (__DIR__ . '/api/users/delete/index.php');
+require_once (__DIR__ . '/api/users/login/index.php');
 
 // File API
 require_once (__DIR__ . '/api/file/create/index.php');
@@ -27,6 +29,7 @@ $routes = [
   '/users/create/' => 'CreateUser',
   '/users/update/' => 'UpdateUser',
   '/users/delete/' => 'DeleteUser',
+  '/users/login/' => 'LoginUser',
   '/file/create/' => 'CreateFile',
   '/file/delete/' => 'DeleteFile'
 ];

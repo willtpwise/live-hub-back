@@ -18,7 +18,9 @@ class GetUsers extends APIComponent {
       $this->get_order($query),
       $this->get_limit($query)
     ];
+
     $this->query = implode(' ', $this->query);
+
     $this->response = new Response([
       'body' => $this->lookup()
     ]);
@@ -60,7 +62,7 @@ class GetUsers extends APIComponent {
   private function get_limit ($query) {
     if (!isset($query['limit'])) {
       return 'LIMIT 25';
-    } else if ($query['limit'] === -1) {
+    } else if (intval($query['limit']) < 0) {
       return '';
     } else {
       return 'LIMIT ' . $query['limit'];
@@ -80,8 +82,8 @@ class GetUsers extends APIComponent {
     $clause = [];
     // If this request is for the current user, attempt to get their ID from
     // their JWT
-    if (@$query['id'] === 'current' && REQUEST_USER) {
-      $query['id'] = REQUEST_USER;
+    if (@$query['id'] === 'current') {
+      $query['id'] = REQUEST_USER || 0;
     }
 
     // Convert the query array into logical operators
@@ -136,7 +138,7 @@ class GetUsers extends APIComponent {
       }
     } else {
       $this->response = new Response([
-        'body' => '[]'
+        'body' => []
       ]);
     }
 

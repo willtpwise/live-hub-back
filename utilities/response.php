@@ -32,7 +32,7 @@ class Response {
     unset($this->args['header']);
 
     // If this is a signed in user, revalidate their JWT
-    if (REQUEST_USER) {
+    if (REQUEST_USER && $this->args['token'] === null) {
       $this->args['token'] = create_token(REQUEST_USER);
     }
 

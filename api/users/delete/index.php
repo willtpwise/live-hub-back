@@ -16,7 +16,7 @@ class DeleteUser extends APIComponent {
 
     if (!isset($payload['id'])) {
       $this->response = new Response([
-        'header' => 400
+        'body' => 'Missing id field'
       ]);
       return;
     }
@@ -37,7 +37,8 @@ class DeleteUser extends APIComponent {
     $this->dump_user();
 
     $this->response = new Response([
-      'body' => 'success'
+      'body' => 'success',
+      'token' => false
     ]);
   }
 
@@ -72,7 +73,7 @@ class DeleteUser extends APIComponent {
    */
   private function dump_user () {
     $user_id = intval($this->user_id);
-    $sql = "DELETE FROM users WHERE user_id = $user_id";
+    $sql = "DELETE FROM users WHERE id = $user_id";
     return $this->conn->query($sql);
   }
 }
