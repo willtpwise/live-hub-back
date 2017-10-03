@@ -48,7 +48,7 @@ class DeleteUser extends APIComponent {
    * @return true / false
    */
   private function is_permitted () {
-    if (REQUEST_USER === intval($this->user_id)) {
+    if (intval(REQUEST_USER) === intval($this->user_id)) {
       return true;
     } else {
       return false;

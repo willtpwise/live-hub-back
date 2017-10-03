@@ -7,36 +7,59 @@ use Firebase\JWT\JWT;
 use Zend\Config\Factory;
 use GeoIp2\Database\Reader;
 use Zend\Http\PhpEnvironment\Request;
+use Facebook\FacebookRequest;
 
 class CreateUser extends APIComponent {
   private $fields;
+  private $method;
   private $required;
   private $payload;
   private $conn;
 
   function __construct ($payload) {
     $this->conn = connect();
+    $this->payload = $payload;
 
     $this->fields = array(
      'password',
+     'facebook_id',
      'first_name',
+     'display',
      'last_name',
      'email'
     );
 
-    $this->required = array(
-     'password',
-     'first_name',
-     'last_name',
-     'email'
-    );
+    if (isset($this->payload['facebook_id'])) {
+      $this->method = 'social';
+    } else {
+      $this->method = 'manual';
+    }
 
-    if ($this->validate($payload)) {
+    if ($this->validate()) {
       // Sanitize the payload
       $this->payload = $this->sanitize($payload);
 
+      // Check for duplicates
+      if ($this->is_duplicate()) {
+        $this->response = new Response([
+          'body' => 'duplicate'
+        ]);
+        return;
+      }
+
+      // Social user's don't pass a password, but a random one will be generated
+      // for them
+      if ($this->method === 'social') {
+        $this->payload['password'] = openssl_random_pseudo_bytes(10);
+      }
+
       // Encrypt the password
       $this->payload['password'] = $this->encrypt($this->payload['password']);
+
+      // Source the user's Facebook picture
+      if (!empty($payload['facebook_picture'])) {
+        $this->store_fb_profile_pic($payload['facebook_picture']);
+      }
 
       // Geolocate
       $location = $this->get_location();
@@ -62,14 +85,21 @@ class CreateUser extends APIComponent {
    * @return If the query fails, a Response object with a 500 header
    */
   private function store () {
+    // Unset system fields
+    unset($this->payload['facebook_picture']);
+
+    // Record the creation data
+    $this->payload['created'] = date('U');
+
     // Collect the fields and values
     $fields = implode(", ", array_keys($this->payload));
     $values = "'" . implode("', '", $this->payload) . "'";
 
     // Query
     $sql = "INSERT INTO users ($fields) VALUES ($values)";
+    $sql = $this->conn->query($sql);
 
-    if ($this->conn->query($sql) === true) {
+    if ($sql === true) {
       return new Response([
         'body' => 'success',
         'token' => create_token($this->conn->insert_id)
@@ -78,6 +108,21 @@ class CreateUser extends APIComponent {
       return new Response([
         'body' => 'invalid request'
       ]);
+    }
+  }
+
+  /**
+   * Stores a local copy of the user's Facebook profile picture
+   *
+   * This function should be called before the main ::store method as if
+   * successful it will append the URL to the payload
+   *
+   * @return void
+   */
+  private function store_fb_profile_pic ($source) {
+    $target = user_picture_path('facebook-upload.jpg');
+    if (copy($source, $target)) {
+      $this->payload['display'] = $target;
     }
   }
 
@@ -121,18 +166,40 @@ class CreateUser extends APIComponent {
    *
    * @return bool
    */
-  private function validate ($query) {
-    // Check that all required fields exist
-    foreach ($this->required as $field) {
-      if (empty($query[$field])) {
-        return false;
+  private function validate () {
+    $payload = $this->payload;
+    // Unset fields that don't match the spec
+    foreach (array_keys($payload) as $field) {
+      if (!in_array($field, $this->fields)) {
+        unset($payload[$field]);
       }
     }
 
-    // Record the creation data
-    $this->payload['created'] = date('U');
+    // If the user is signing up manually (I.e. not via a social network), then
+    // we also need a password
+    if ($this->method === 'manual' && empty($payload['password'])) {
+      return false;
+    }
 
+    $this->payload = $payload;
     return true;
+  }
+
+  /**
+   * Checks to see if the incoming request already exists in the DB
+   *
+   * @return bool
+   */
+  private function is_duplicate () {
+    $email = $this->payload['email'];
+    $facebook_id = '0';
+    if (!empty($this->payload['facebook_id'])) {
+      $facebook_id = $this->payload['facebook_id'];
+    }
+    $sql = "SELECT id FROM users WHERE email='$email' OR facebook_id='$facebook_id'";
+    $sql = $this->conn->query($sql);
+
+    return $sql->num_rows > 0;
   }
 
   /**

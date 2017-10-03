@@ -83,7 +83,7 @@ class GetUsers extends APIComponent {
     // If this request is for the current user, attempt to get their ID from
     // their JWT
     if (@$query['id'] === 'current') {
-      $query['id'] = REQUEST_USER || 0;
+      $query['id'] = REQUEST_USER ? REQUEST_USER : 0;
     }
 
     // Convert the query array into logical operators

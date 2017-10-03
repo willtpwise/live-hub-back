@@ -15,7 +15,8 @@ class CreateFile extends APIComponent {
     $this->payload = @$_FILES['upload'];
 
     if ($this->validate()) {
-      $thumbnail = new MakeThumb($this->payload['tmp_name'], $this->create_name());
+      $thumbnail_path = user_picture_path($this->payload['tmp_name']);
+      $thumbnail = new MakeThumb($this->payload['tmp_name'], $thumbnail_path);
       $thumbnail = $thumbnail->thumbnail();
 
       if ($thumbnail) {
@@ -32,20 +33,6 @@ class CreateFile extends APIComponent {
         'body' => 'Invalid request'
       ));
     }
-  }
-
-  private function create_name () {
-    // Format: `uploads/user/<user id>/<timestamp>-<filename>`
-    $target_dir = 'uploads/user/' . REQUEST_USER . '/';
-    if (!file_exists($target_dir)) {
-      mkdir($target_dir);
-    }
-    $target_name = basename($this->payload["name"]);
-    $target_name = date('U') . '-' . $target_name;
-    $target_name = urlencode(strtolower($target_name));
-    $target_name = $target_dir . $target_name;
-
-    return $target_name;
   }
 
   private function validate () {
