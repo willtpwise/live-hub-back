@@ -1,5 +1,5 @@
 <?php
-class MakeThumb {
+class Thumbnail {
   public $src;
   public $save;
   function __construct ($src, $save) {

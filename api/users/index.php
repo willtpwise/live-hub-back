@@ -133,8 +133,16 @@ class GetUsers extends APIComponent {
         $meta = "SELECT * FROM meta WHERE user_id = '" . $user['id'] . "'";
         $meta = $this->conn->query($meta);
 
+        // Query the user's display picture
+        // See: api/file/index.php
+        $display = new GetFile([
+          'taxonomy' => 'display',
+          'user_id' => $user['id']
+        ]);
+        $display = $display->response->get('body');
+
         // Format and store the result
-        $results[] = $this->format_user($user, $meta);
+        $results[] = $this->format_user($user, $meta, $display);
       }
     } else {
       $this->response = new Response([
@@ -150,10 +158,11 @@ class GetUsers extends APIComponent {
    *
    * @param $profile: The user's profile information, from the users table
    * @param $meta: The user's meta data, from the meta table
+   * @param $display: The user's display picture data. See the file api.
    *
    * @return The user's data as an array
    */
-  private function format_user ($user, $meta) {
+  private function format_user ($user, $meta, $display) {
     // Ensure the data model is up to spec, by filling in meta fields that may
     // be missing
     $user['meta'] = [
@@ -162,7 +171,7 @@ class GetUsers extends APIComponent {
       'social' => []
     ];
 
-    // Append the meta data to the user by category
+    // Append the meta data by category
     if ($meta->num_rows > 0) {
       while ($meta_item = $meta->fetch_assoc()) {
         $user['meta'][$meta_item['category']][] = [
@@ -171,6 +180,9 @@ class GetUsers extends APIComponent {
         ];
       }
     }
+
+    // Append the display data
+    $user['display'] = $display;
 
     return $user;
   }

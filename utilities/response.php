@@ -13,6 +13,12 @@ class Response {
     ), $args);
   }
 
+  public function get ($keyname) {
+    if (isset($this->args[$keyname])) {
+      return $this->args[$keyname];
+    }
+  }
+
   public function format ($args) {
     return json_encode($args);
   }

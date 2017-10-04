@@ -22,17 +22,22 @@ require_once (__DIR__ . '/api/users/delete/index.php');
 require_once (__DIR__ . '/api/users/login/index.php');
 
 // File API
+require_once (__DIR__ . '/api/file/index.php');
 require_once (__DIR__ . '/api/file/create/index.php');
 require_once (__DIR__ . '/api/file/delete/index.php');
 
 $routes = [
-  '/users/' => 'GetUsers',
+  // User api
+  '/users/'        => 'GetUsers',
   '/users/create/' => 'CreateUser',
   '/users/update/' => 'UpdateUser',
   '/users/delete/' => 'DeleteUser',
-  '/users/login/' => 'LoginUser',
-  '/file/create/' => 'CreateFile',
-  '/file/delete/' => 'DeleteFile'
+  '/users/login/'  => 'LoginUser',
+
+  // File api
+  '/file/'         => 'GetFile',
+  '/file/create/'  => 'CreateFile',
+  '/file/delete/'  => 'DeleteFile'
 ];
 
 if (isset($routes[REQUEST_URI])) {
