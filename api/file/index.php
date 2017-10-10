@@ -14,14 +14,6 @@ class GetFile extends APIComponent {
   function __construct ($payload) {
     $this->conn = connect();
 
-    // Validate
-    if (!REQUEST_USER) {
-      $this->response = new Response([
-        'body' => "Invalid request"
-      ]);
-      return;
-    }
-
     // Payload
     // Defaults are used for post requests
     $this->payload = array_merge([

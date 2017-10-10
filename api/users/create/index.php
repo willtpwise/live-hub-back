@@ -54,12 +54,7 @@ class CreateUser extends APIComponent {
       }
 
       // Encrypt the password
-      $this->payload['password'] = $this->encrypt($this->payload['password']);
-
-      // Source the user's Facebook picture
-      if (!empty($payload['facebook_picture'])) {
-        $this->store_fb_profile_pic($payload['facebook_picture']);
-      }
+      $this->payload['password'] = encrypt_password($this->payload['password']);
 
       // Geolocate
       $location = $this->get_location();
@@ -68,7 +63,22 @@ class CreateUser extends APIComponent {
       }
 
       // Store the user
-      $this->response = $this->store();
+      $store = $this->store();
+      if (!$store) {
+        return new Response([
+          'body' => 'error'
+        ]);
+      }
+
+      // Source the user's Facebook picture
+      if (!empty($payload['facebook_picture'])) {
+        $this->store_fb_profile_pic($payload['facebook_picture'], $store);
+      }
+
+      $this->response = new Response([
+        'body' => 'success',
+        'token' => create_token($store)
+      ]);
     } else {
       $this->response = new Response([
         'body' => 'Invalid request'
@@ -79,10 +89,9 @@ class CreateUser extends APIComponent {
   /**
    * Stores the payload in the database
    *
-   * @return A Response object to be sent to the user. The respone object will
-   * contain the token field with a valid JWT
+   * @return The user's ID
    *
-   * @return If the query fails, a Response object with a 500 header
+   * @return False
    */
   private function store () {
     // Unset system fields
@@ -100,14 +109,9 @@ class CreateUser extends APIComponent {
     $sql = $this->conn->query($sql);
 
     if ($sql === true) {
-      return new Response([
-        'body' => 'success',
-        'token' => create_token($this->conn->insert_id)
-      ]);
+      return $this->conn->insert_id;
     } else {
-      return new Response([
-        'body' => 'invalid request'
-      ]);
+      return false;
     }
   }
 
@@ -117,24 +121,18 @@ class CreateUser extends APIComponent {
    * This function should be called before the main ::store method as if
    * successful it will append the URL to the payload
    *
+   * @param $source: A URL to the file
+   * @param $user_id: The user's ID to attribute the upload to
+   *
    * @return void
    */
-  private function store_fb_profile_pic ($source) {
-    $target = user_picture_path('facebook-upload.jpg');
-    if (copy($source, $target)) {
-      $this->payload['display'] = $target;
-    }
-  }
-
-  /**
-   * Encrypt the password
-   *
-   * @param $password: The password to be encrypted
-   *
-   * @return The encrypted password
-   */
-  private function encrypt ($password) {
-    return password_hash($password, PASSWORD_DEFAULT);
+  private function store_fb_profile_pic ($source, $user_id) {
+    $temp = tempnam(sys_get_temp_dir(), 'TMP_');
+    file_put_contents($temp, file_get_contents($source));
+    $upload = new CreateFile([
+      'user' => $user_id,
+      'file' => $temp
+    ]);
   }
 
   /**

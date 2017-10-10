@@ -1,6 +1,6 @@
 <?php
 /**
- * Lists a single user
+ * Lists one or more users
  */
 
 use Zend\Config\Factory;
@@ -100,7 +100,7 @@ class GetUsers extends APIComponent {
           );
         } else {
           $val = $query[$key];
-          $clause[] = "$key = $val";
+          $clause[] = "$key = '$val'";
         }
       }
     }
@@ -129,6 +129,9 @@ class GetUsers extends APIComponent {
 
     if ($users) {
       while ($user = $users->fetch_assoc()) {
+        // Strip hidden fields
+        unset($user['password']);
+
         // Query the user's meta data
         $meta = "SELECT * FROM meta WHERE user_id = '" . $user['id'] . "'";
         $meta = $this->conn->query($meta);

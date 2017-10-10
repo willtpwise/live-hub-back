@@ -27,7 +27,11 @@ function decode_token ($token) {
   if ($token) {
     $config = Factory::fromFile('config/config.php', true);
     $secretKey = base64_decode($config->get('jwt')->get('key'));
-    $token = JWT::decode($token, $secretKey, [$config->get('jwt')->get('algorithm')]);
+    try {
+      $token = JWT::decode($token, $secretKey, [$config->get('jwt')->get('algorithm')]);
+    } catch (Exception $e) {
+      return false;
+    }
     return $token;
   }
 }

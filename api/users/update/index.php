@@ -25,7 +25,7 @@ class UpdateUser extends APIComponent {
     if ($this->validate($payload)) {
       // Encrypt the password
       if (!empty($this->payload['password'])) {
-        $this->payload['password'] = $this->encrypt($this->payload['password']);
+        $this->payload['password'] = encrypt_password($this->payload['password']);
       }
 
       // Dump any existing meta
@@ -51,7 +51,7 @@ class UpdateUser extends APIComponent {
    * @return true / false
    */
   private function is_permitted () {
-    if (isset($this->payload['id']) && REQUEST_USER === intval($this->payload['id'])) {
+    if (isset($this->payload['id']) && intval(REQUEST_USER) === intval($this->payload['id'])) {
       return true;
     } else {
       return false;
@@ -78,6 +78,7 @@ class UpdateUser extends APIComponent {
     // Seperate the meta payload from the user payload
     $payload = $this->payload;
     unset($payload['meta']);
+    unset($payload['display']);
 
     // Prevent read-only data being overwritter
     $user_id = $payload['id'];
@@ -85,7 +86,7 @@ class UpdateUser extends APIComponent {
     unset($payload['created']);
 
     // Prevent passwords being overwritten with empty strings
-    if (isset($payload['password']) && empty($payload['password'])) {
+    if (empty($payload['password'])) {
       unset($payload['password']);
     }
 
@@ -138,17 +139,6 @@ class UpdateUser extends APIComponent {
         $this->conn->query($sql);
       }
     }
-  }
-
-  /**
-   * Encrypt the password
-   *
-   * @param $password: The password to be encrypted
-   *
-   * @return The encrypted password
-   */
-  private function encrypt ($password) {
-    return password_hash($password, PASSWORD_DEFAULT);
   }
 
   /**

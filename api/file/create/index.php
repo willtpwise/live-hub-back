@@ -20,7 +20,8 @@ class CreateFile extends APIComponent {
     // Payload defaults
     // Defaults are used for post requests
     $this->payload = array_merge([
-      'file' => @$_FILES['upload'],
+      'user_id' => REQUEST_USER,
+      'file' => @$_FILES['upload']['tmp_name'],
       'overide' => true,
       'taxonomy' => 'display'
     ], $payload);
@@ -46,7 +47,7 @@ class CreateFile extends APIComponent {
     $common_filename = 'uploads/temp/' . date('U') . '-%s.jpg';
 
     // Convert the file to jpeg
-    $master = $this->convert_to_jpg($this->payload['file']['tmp_name']);
+    $master = $this->convert_to_jpg($this->payload['file']);
 
     // Save a local copy of the file
     $save_to = sprintf($common_filename, 'master');
@@ -204,12 +205,12 @@ class CreateFile extends APIComponent {
    */
   public function validate () {
     // Check to see the user is logged in
-    if (!REQUEST_USER) {
+    if (REQUEST_URI !== '/users/create/' && !REQUEST_USER) {
       return false;
     }
 
     // Check that the file is an image and exists
-    if (!isset($this->payload['file']) || !getimagesize($this->payload['file']['tmp_name'])) {
+    if (!file_exists($this->payload['file']) || !getimagesize($this->payload['file'])) {
       return false;
     }
 
@@ -242,7 +243,7 @@ class CreateFile extends APIComponent {
       'height' => $height,
       'taxonomy' => $taxonomy,
       'url' => $remote,
-      'user_id' => REQUEST_USER
+      'user_id' => $this->payload['user_id']
     ];
 
     // Sanitize
