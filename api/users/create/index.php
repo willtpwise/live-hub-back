@@ -130,7 +130,7 @@ class CreateUser extends APIComponent {
     $temp = tempnam(sys_get_temp_dir(), 'TMP_');
     file_put_contents($temp, file_get_contents($source));
     $upload = new CreateFile([
-      'user' => $user_id,
+      'user_id' => $user_id,
       'file' => $temp
     ]);
   }
