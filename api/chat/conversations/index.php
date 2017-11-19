@@ -94,7 +94,7 @@ class GetConversations extends APIComponent {
     $members = "SELECT * FROM users_in_conversations WHERE conversation = $conversation";
     $members = $this->conn->query($members);
     while ($member = $members->fetch_assoc()) {
-      $response['members'][] = $this->member($member['user']);
+      $response['members'][$member['user']] = $this->member($member['user']);
     }
 
     return $response;

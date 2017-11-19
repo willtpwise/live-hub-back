@@ -12,9 +12,10 @@
     <script>
       var jwt = localStorage.getItem('LiveHUB')
       var payload = {
-        'limit': 1
+        conversation: 45,
+        content: 'sdfghjklkxcghjk'
       }
-      axios.post('/chat/conversations/', jQuery.param(payload), {
+      axios.post('/chat/messages/create/', jQuery.param(payload), {
         headers: {
           Authorization: 'Bearer ' + jwt
         }
