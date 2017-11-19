@@ -34,6 +34,12 @@ require_once (__DIR__ . '/api/notify/index.php');
 require_once (__DIR__ . '/api/password-reset/index.php');
 require_once (__DIR__ . '/api/password-reset/validate-challenge/index.php');
 
+// Chat
+require_once (__DIR__ . '/api/chat/conversations/create.php');
+require_once (__DIR__ . '/api/chat/conversations/index.php');
+require_once (__DIR__ . '/api/chat/messages/create.php');
+require_once (__DIR__ . '/api/chat/messages/index.php');
+
 $routes = [
   // User API
   '/users/'          => 'GetUsers',
@@ -47,7 +53,13 @@ $routes = [
 
   // Password Reset API
   '/password-reset/' => 'PasswordReset',
-  '/password-reset/validate-challenge/' => 'PasswordChallenge'
+  '/password-reset/validate-challenge/' => 'PasswordChallenge',
+
+  // Chat API
+  '/chat/conversations/create/' => 'CreateConversation',
+  '/chat/conversations/' => 'GetConversations',
+  '/chat/messages/create/' => 'CreateMessage',
+  '/chat/messages/' => 'GetMessages'
 ];
 
 if (isset($routes[REQUEST_URI])) {

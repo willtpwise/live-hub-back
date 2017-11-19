@@ -12,34 +12,15 @@
     <script>
       var jwt = localStorage.getItem('LiveHUB')
       var payload = {
-        // 'email': 'will@williamwise.net'
-        'id': '89',
-        'challenge': 'wm895g',
-        'password': 'anzacs22'
+        'limit': 1
       }
-      axios.post('/password-reset/validate-challenge/', jQuery.param(payload), {
-        // headers: {
-        //   Authorization: 'Bearer ' + jwt
-        // }
+      axios.post('/chat/conversations/', jQuery.param(payload), {
+        headers: {
+          Authorization: 'Bearer ' + jwt
+        }
       }).then((response) => {
         console.log(response.data)
       })
-
-
-      // var jwt = localStorage.getItem('LiveHUB')
-      // var payload = {
-      //   'email': 'will@williamwise.net'
-      //   // 'id': '89',
-      //   // 'challenge': 'znql71',
-      //   // 'password': 'anzacs22'
-      // }
-      // axios.post('/password-reset/', jQuery.param(payload), {
-      //   // headers: {
-      //   //   Authorization: 'Bearer ' + jwt
-      //   // }
-      // }).then((response) => {
-      //   console.log(response.data)
-      // })
     </script>
 
   </body>
