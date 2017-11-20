@@ -25,11 +25,21 @@ class GetConversations extends APIComponent {
       return;
     }
 
+    if (isset($this->payload['after']) && !is_numeric($this->payload['after'])) {
+      $this->response = new Response([
+        'body' => 'Invalid request. The after property must be numeric.'
+      ]);
+      return;
+    }
+
     $response = [];
     $conversations = $this->query();
 
     foreach ($conversations as $conversation) {
-      $response[] = $this->format($conversation);
+      $formatted = $this->format($conversation);
+      if (count($formatted['messages']) > 0 || empty($this->payload['after'])) {
+        $response[$conversation] = $formatted;
+      }
     }
 
     $this->response = new Response([
@@ -75,6 +85,12 @@ class GetConversations extends APIComponent {
 
     // Query the messages
     $messages = "SELECT * FROM messages WHERE conversation = $conversation";
+
+    // Append the 'after' property
+    if (!empty($this->payload['after'])) {
+      $messages .= ' AND id > ' . $this->payload['after'];
+    }
+
     $messages = $this->conn->query($messages);
 
     if ($messages->num_rows > 0) {
@@ -83,6 +99,7 @@ class GetConversations extends APIComponent {
 
         // Add the message
         $response['messages'][] = [
+          'id' => $message['id'],
           'user' => $message['user'],
           'content' => $message['content'],
           'created' => $message['created']
