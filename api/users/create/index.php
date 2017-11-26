@@ -42,6 +42,7 @@ class CreateUser extends APIComponent {
       // Check for duplicates
       if ($this->is_duplicate()) {
         $this->response = new Response([
+          'status' => false,
           'body' => 'duplicate'
         ]);
         return;
@@ -66,6 +67,7 @@ class CreateUser extends APIComponent {
       $store = $this->store();
       if (!$store) {
         return new Response([
+          'status' => false,
           'body' => 'error'
         ]);
       }
@@ -76,12 +78,14 @@ class CreateUser extends APIComponent {
       }
 
       $this->response = new Response([
+        'status' => true,
         'body' => 'success',
         'token' => create_token($store)
       ]);
     } else {
       $this->response = new Response([
-        'body' => 'Invalid request'
+        'status' => false,
+        'body' => 'Invalid request. Payload properties missing.'
       ]);
     }
   }
