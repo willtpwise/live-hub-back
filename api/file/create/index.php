@@ -302,6 +302,7 @@ class CreateFile extends APIComponent {
    */
   public function save_to_s3 ($filepath) {
     $config = Factory::fromFile('config/config.php', true);
+    var_dump($config);
     $bucket = 'live-hub-uploads';
     $keyname = explode('/', $filepath);
     $keyname = $keyname[count($keyname) - 1];
@@ -320,12 +321,12 @@ class CreateFile extends APIComponent {
 
       // Upload a file.
       $result = $s3->putObject(array(
-          'Bucket'       => $bucket,
-          'Key'          => $keyname,
-          'SourceFile'   => $filepath,
-          'ContentType'  => mime_content_type($filepath),
-          'ACL'          => 'public-read',
-          'StorageClass' => 'REDUCED_REDUNDANCY'
+        'Bucket'       => $bucket,
+        'Key'          => $keyname,
+        'SourceFile'   => $filepath,
+        'ContentType'  => mime_content_type($filepath),
+        'ACL'          => 'public-read',
+        'StorageClass' => 'REDUCED_REDUNDANCY'
       ));
 
       return $result['ObjectURL'];
