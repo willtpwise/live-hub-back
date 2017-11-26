@@ -301,8 +301,7 @@ class CreateFile extends APIComponent {
    * @return False on error
    */
   public function save_to_s3 ($filepath) {
-    $config = Factory::fromFile('config/config.php', true);
-    var_dump($config);
+    $config = Factory::fromFile('config/config.php', true)
     $bucket = 'live-hub-uploads';
     $keyname = explode('/', $filepath);
     $keyname = $keyname[count($keyname) - 1];
