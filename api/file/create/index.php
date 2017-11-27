@@ -80,10 +80,7 @@ class CreateFile extends APIComponent {
           'remote' => $remote_url
         ];
       } else {
-        $this->response = new Response([
-          'header' => 500,
-          'body' => 'Failed to connect to S3'
-        ]);
+        // S3 error will be dumped in the response
         return;
       }
     }
@@ -330,6 +327,10 @@ class CreateFile extends APIComponent {
 
       return $result['ObjectURL'];
     } catch (Exception $e) {
+      $this->response = new Response([
+        'header' => 500,
+        'body' => 'Failed to connect to S3: ' . $e
+      ]);
       return false;
     }
   }
