@@ -80,10 +80,11 @@ class UpdateUser extends APIComponent {
     unset($payload['meta']);
     unset($payload['display']);
 
-    // Prevent read-only data being overwritter
+    // Prevent read-only data being overwritten
     $user_id = $payload['id'];
     unset($payload['id']);
     unset($payload['created']);
+    unset($payload['link']);
 
     // Prevent passwords being overwritten with empty strings
     if (empty($payload['password'])) {
