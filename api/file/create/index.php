@@ -47,8 +47,13 @@ class CreateFile extends APIComponent {
     // Set a common filename for the processed files
     $common_filename = 'uploads/temp/' . date('U') . '-%s.jpg';
 
+    $master = $this->payload['file'];
+
     // Convert the file to jpeg
-    $master = $this->convert_to_jpg($this->payload['file']);
+    $master = $this->convert_to_jpg($master);
+
+    // Orientate the file
+    $master = $this->orientate_image($master);
 
     // Save a local copy of the file
     $save_to = sprintf($common_filename, 'master');
@@ -114,6 +119,31 @@ class CreateFile extends APIComponent {
     ]);
     $this->response = $request->response;
 
+  }
+
+  /**
+   * Normalises the orientation of the image based on it's EXIF data
+   *
+   * @param $image: An image resource
+   *
+   * @return An image resource
+   */
+  public function orientate_image ($image) {
+    $exif = exif_read_data($this->payload['file']);
+    if (!empty($exif['Orientation'])) {
+      switch ($exif['Orientation']) {
+        case 8:
+          $image = imagerotate($image, 90, 0);
+          break;
+        case 3:
+          $image = imagerotate($image, 180, 0);
+          break;
+        case 6:
+          $image = imagerotate($image, -90, 0);
+          break;
+      }
+    }
+    return $image;
   }
 
   /**

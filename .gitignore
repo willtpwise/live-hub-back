@@ -4,3 +4,5 @@ php.ini
 .idea/
 php_errors.log
 node_modules
+.DS_Store
+/uploads/temp/
