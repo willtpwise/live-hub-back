@@ -19,8 +19,19 @@ class Response {
     }
   }
 
+  public function utf8ize($d) {
+    if (is_array($d)) {
+      foreach ($d as $k => $v) {
+        $d[$k] = $this->utf8ize($v);
+      }
+    } else if (is_string ($d)) {
+      return utf8_encode($d);
+    }
+    return $d;
+  }
+
   public function format ($args) {
-    return json_encode($args);
+    return json_encode($this->utf8ize($args));
   }
 
   public function send () {
@@ -41,7 +52,6 @@ class Response {
     if (REQUEST_USER && $this->args['token'] === null) {
       $this->args['token'] = create_token(REQUEST_USER);
     }
-
     echo $this->format($this->args);
   }
 }

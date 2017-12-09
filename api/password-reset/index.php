@@ -27,7 +27,8 @@ class PasswordReset extends APIComponent {
     $user_id = $this->query($payload['email']);
 
     if (!$user_id) {
-      // Response the same way as a successful request
+      // The user doesn't exist
+      // Respond the same way as a successful request
       // The user shouldn't learn that that email doesn't exist
       $this->response = new Response(array(
         'body' => 'success'
@@ -109,6 +110,7 @@ class PasswordReset extends APIComponent {
    */
   public function log($user_id, $challenge) {
     // Dump any unanswered requests
+    // There should never be more than one active challenge / user in the DB
     $dump = "DELETE FROM password_reset WHERE user_id='$user_id'";
     $this->conn->query($dump);
 

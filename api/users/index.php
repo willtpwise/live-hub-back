@@ -22,6 +22,7 @@ class GetUsers extends APIComponent {
     $this->query = implode(' ', $this->query);
 
     $this->response = new Response([
+      'status' => true,
       'body' => $this->lookup()
     ]);
   }
@@ -187,6 +188,13 @@ class GetUsers extends APIComponent {
     // Append the display data
     $user['display'] = $display;
 
+    // Append the user's profile URL
+    $user['link'] = $this->user_link($user);
+
     return $user;
+  }
+
+  private function user_link ($user) {
+    return '/app/users/' . $user['id'];
   }
 }

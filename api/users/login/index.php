@@ -27,7 +27,7 @@ class LoginUser extends APIComponent {
       ]);
     } else {
       $this->response = new Response([
-        'body' => 'Invalid request'
+        'body' => 'Failed to sign in'
       ]);
     }
   }

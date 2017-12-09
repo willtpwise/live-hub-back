@@ -35,7 +35,8 @@ class CreateFile extends APIComponent {
     // Validate the incoming request
     if (!$this->validate()) {
       $this->response = new Response(array(
-        'body' => 'Invalid request'
+        'status' => false,
+        'body' => 'Invalid request. Missing or invalid payload.'
       ));
       return;
     }
@@ -51,7 +52,14 @@ class CreateFile extends APIComponent {
 
     // Save a local copy of the file
     $save_to = sprintf($common_filename, 'master');
-    $this->create_temp_file($master, $save_to);
+    if (!$this->create_temp_file($master, $save_to)) {
+      $this->response = new Response([
+        'status' => false,
+        'header' => 500,
+        'body' => 'Unable to write local file.'
+      ]);
+      return;
+    }
     $master = $save_to;
     $processed_files['master'] = $master;
 
@@ -207,7 +215,7 @@ class CreateFile extends APIComponent {
     }
 
     // Check that the file is an image and exists
-    if (!file_exists($this->payload['file']) || !getimagesize($this->payload['file'])) {
+    if (getimagesize($this->payload['file']) === false) {
       return false;
     }
 

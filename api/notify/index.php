@@ -35,9 +35,9 @@ class Notify extends APIComponent {
     if ($user->response->get('body') && $user->response->get('body')[0]) {
       $this->user = $user->response->get('body')[0];
     } else {
-      // The user is unknown
+      // The user does not exist
       $this->response = new Response([
-        'body' => 'success'
+        'body' => 'Invalid request. Unknown to address.'
       ]);
       return;
     }
@@ -46,19 +46,19 @@ class Notify extends APIComponent {
     $template = $this->get_template($this->payload['template'], $this->payload['data']);
     if (!$template) {
       $this->response = new Response([
-        'body' => 'Unknown template'
+        'header' => 500,
+        'body' => 'Internal error. Unknown template'
       ]);
       return;
     }
 
     // Send the email
-    $sent = $this->send(
-      $template['subject'],
-      $template['content'],
-      $this->payload['to']
-    );
     $this->response = new Response([
-      'body' => $sent
+      'body' => 'Send: ' . $this->send(
+        $template['subject'],
+        $template['content'],
+        $this->payload['to']
+      )
     ]);
   }
 
@@ -105,7 +105,6 @@ class Notify extends APIComponent {
    * @return True / False indicating whether the email was sent
    */
   private function send ($subject, $message, $to) {
-    // Authenticate
     $config = Factory::fromFile('config/config.php', true);
     $client = SesClient::factory(array(
         // 'profile' => 'personal',
@@ -117,27 +116,27 @@ class Notify extends APIComponent {
         ]
     ));
 
-    return $client->sendEmail(array(
+    $response = $client->sendEmail(array(
       // Source is required
-      'Source' => 'will@williamwise.net',
+      'Source' => 'noreply@livehub.com.au',
       // Destination is required
       'Destination' => array(
-          'ToAddresses' => array($to)
+        'ToAddresses' => array($to)
       ),
       // Message is required
       'Message' => array(
-          // Subject is required
-          'Subject' => array(
-              // Data is required
-              'Data' => $subject,
+        // Subject is required
+        'Subject' => array(
+          // Data is required
+          'Data' => $subject,
+        ),
+        // Body is required
+        'Body' => array(
+          'Html' => array(
+            // Data is required
+            'Data' => $message
           ),
-          // Body is required
-          'Body' => array(
-              'Html' => array(
-                  // Data is required
-                  'Data' => $message
-              ),
-          ),
+        ),
       )
     ));
   }
