@@ -31,7 +31,7 @@ class Response {
   }
 
   public function format ($args) {
-    return json_encode($this->utf8ize($args));
+    return json_encode($args);
   }
 
   public function send () {
