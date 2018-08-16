@@ -191,6 +191,16 @@ class GetUsers extends APIComponent {
     // Append the user's profile URL
     $user['link'] = $this->user_link($user);
 
+    // Stabilise the response for contact preference
+    try {
+      $user['contact_preference'] = json_decode($user['contact_preference']);
+    } catch (Exception $e) {
+      $user['contact_preference'] = [];
+    }
+    if (empty($user['contact_preference'])) {
+      $user['contact_preference'] = [];
+    }
+
     return $user;
   }
 

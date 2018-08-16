@@ -86,6 +86,9 @@ class UpdateUser extends APIComponent {
     unset($payload['created']);
     unset($payload['link']);
 
+    // Stringify JSON fields
+    $payload['contact_preference'] = json_encode($payload['contact_preference']);
+
     // Prevent passwords being overwritten with empty strings
     if (empty($payload['password'])) {
       unset($payload['password']);
@@ -182,6 +185,8 @@ class UpdateUser extends APIComponent {
       'status',
       'bio',
       'email',
+      'tel',
+      'contact_preference',
       'street_number',
       'route',
       'locality',

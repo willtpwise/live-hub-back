@@ -26,7 +26,9 @@ class CreateUser extends APIComponent {
      'first_name',
      'display',
      'last_name',
-     'email'
+     'email',
+     'tel',
+     'contact_preference'
     );
 
     if (isset($this->payload['facebook_id'])) {
@@ -36,6 +38,7 @@ class CreateUser extends APIComponent {
     }
 
     if ($this->validate()) {
+
       // Sanitize the payload
       $this->payload = $this->sanitize($payload);
 
@@ -66,10 +69,11 @@ class CreateUser extends APIComponent {
       // Store the user
       $store = $this->store();
       if (!$store) {
-        return new Response([
+        $this->response = new Response([
           'status' => false,
           'body' => 'error'
         ]);
+        return;
       }
 
       // Source the user's Facebook picture
